@@ -3,6 +3,8 @@ const YELLOW = '#fbbf24';
 const RED = '#ef4444';
 const WHITE = 'rgba(255,255,255,0.9)';
 
+const DISPLAY_SMOOTHING = 0.15;
+
 export class Overlay {
   constructor(canvas) {
     this.canvas = canvas;
@@ -12,6 +14,7 @@ export class Overlay {
     this.rawBeta = 90;
     this.rawGamma = 0;
     this.mode = 'angle';
+    this._smoothDisplay = 0;
     this._resize();
     window.addEventListener('resize', () => this._resize());
   }
@@ -62,7 +65,9 @@ export class Overlay {
     const { ctx, _w: w, _h: h, rawGamma } = this;
     ctx.clearRect(0, 0, w, h);
 
-    const roll = Math.min(90, Math.abs(rawGamma));
+    const raw = Math.min(90, Math.abs(rawGamma));
+    this._smoothDisplay += DISPLAY_SMOOTHING * (raw - this._smoothDisplay);
+    const roll = this._smoothDisplay;
     const dir = Math.sign(rawGamma);
 
     const pivotX = w / 2;

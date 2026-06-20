@@ -16,8 +16,6 @@ const overlay = new Overlay(canvas);
 let latestData = { pitch: 0, roll: 0, rawBeta: 90, rawGamma: 0 };
 let animFrameId = null;
 let stream = null;
-let orientationReady = false;
-let cameraReady = false;
 let retryCount = 0;
 
 modeBtn.addEventListener('click', () => {
@@ -43,7 +41,6 @@ async function startOrientation() {
     await initOrientation((data) => {
       latestData = data;
     });
-    orientationReady = true;
     await startCamera();
   } catch (err) {
     const msg = err.message || '';
@@ -66,10 +63,10 @@ async function startCamera() {
     stream = await initCamera();
     video.srcObject = stream;
     await video.play();
-    cameraReady = true;
     startOverlay.classList.add('hidden');
     modeBtn.classList.remove('hidden');
     startAnimation();
+    enterFullScreen();
   } catch (err) {
     showError(err.message || 'Camera failed');
     startBtn.disabled = false;
@@ -83,6 +80,20 @@ function startAnimation() {
     animFrameId = requestAnimationFrame(tick);
   }
   tick();
+}
+
+function enterFullScreen() {
+  setTimeout(() => {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().then(() => {
+        document.addEventListener('click', () => {
+          if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+          }
+        }, { once: true });
+      }).catch(() => {});
+    }
+  }, 500);
 }
 
 function showRetry(msg) {

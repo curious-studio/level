@@ -1,4 +1,4 @@
-const SMOOTHING = 0.3;
+const SMOOTHING = 0.08;
 
 let smoothPitch = 0;
 let smoothRoll = 0;

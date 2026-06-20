@@ -2,6 +2,8 @@ const SMOOTHING = 0.3;
 
 let smoothPitch = 0;
 let smoothRoll = 0;
+let smoothRawBeta = 90;
+let smoothRawGamma = 0;
 const listeners = [];
 
 function handleOrientation(event) {
@@ -20,8 +22,15 @@ function handleOrientation(event) {
 
   smoothPitch += SMOOTHING * (pitch - smoothPitch);
   smoothRoll += SMOOTHING * (roll - smoothRoll);
+  smoothRawBeta += SMOOTHING * (beta - smoothRawBeta);
+  smoothRawGamma += SMOOTHING * (gamma - smoothRawGamma);
 
-  const data = { pitch: smoothPitch, roll: smoothRoll };
+  const data = {
+    pitch: smoothPitch,
+    roll: smoothRoll,
+    rawBeta: smoothRawBeta,
+    rawGamma: smoothRawGamma,
+  };
   listeners.forEach(fn => fn(data));
 }
 

@@ -100,6 +100,34 @@ html, body {
   display: none;
 }
 
+#retry-btn {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 32px;
+  font-size: 16px;
+  border: 2px solid #fff;
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 30;
+}
+
+#retry-btn.hidden {
+  display: none;
+}
+
+#retry-btn:disabled {
+  opacity: 0.4;
+}
+
+#retry-btn:not(:disabled):active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 #mode-btn {
   position: absolute;
   bottom: 80px;

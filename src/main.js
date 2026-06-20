@@ -9,48 +9,73 @@ const startBtn = document.getElementById('start-btn');
 const statusMsg = document.getElementById('status-msg');
 const errorMsg = document.getElementById('error-msg');
 const modeBtn = document.getElementById('mode-btn');
+const retryBtn = document.getElementById('retry-btn');
 
 const overlay = new Overlay(canvas);
 
 let latestData = { pitch: 0, roll: 0, rawBeta: 90, rawGamma: 0 };
 let animFrameId = null;
 let stream = null;
+let orientationReady = false;
+let cameraReady = false;
+let retryCount = 0;
 
 modeBtn.addEventListener('click', () => {
   const mode = overlay.toggleMode();
   modeBtn.textContent = mode === 'angle' ? 'Bubble Level' : 'Angle Measure';
 });
 
+retryBtn.addEventListener('click', async () => {
+  retryBtn.disabled = true;
+  errorMsg.classList.add('hidden');
+  statusMsg.textContent = 'Requesting sensors...';
+  await startOrientation();
+});
+
 startBtn.addEventListener('click', async () => {
   startBtn.disabled = true;
+  statusMsg.textContent = 'Requesting sensors...';
+  await startOrientation();
+});
 
+async function startOrientation() {
   try {
-    statusMsg.textContent = 'Requesting sensors...';
     await initOrientation((data) => {
       latestData = data;
     });
+    orientationReady = true;
+    await startCamera();
+  } catch (err) {
+    const msg = err.message || '';
+    retryCount++;
+    if (msg.includes('denied') && retryCount >= 2) {
+      showPermissionHelp();
+    } else if (msg.includes('denied')) {
+      showRetry('Orientation permission needed');
+    } else {
+      showError(msg || 'Failed to start');
+      startBtn.disabled = false;
+      statusMsg.textContent = 'Tap to retry';
+    }
+  }
+}
 
+async function startCamera() {
+  try {
     statusMsg.textContent = 'Requesting camera...';
     stream = await initCamera();
     video.srcObject = stream;
     await video.play();
-
+    cameraReady = true;
     startOverlay.classList.add('hidden');
     modeBtn.classList.remove('hidden');
     startAnimation();
   } catch (err) {
-    const msg = err.message || '';
-    if (msg.includes('permission') || msg.includes('denied')) {
-      showError(
-        'Permission denied. On iPhone: Settings > Safari > Clear History & Website Data, then refresh and try again.'
-      );
-    } else {
-      showError(msg || 'Failed to start');
-    }
+    showError(err.message || 'Camera failed');
     startBtn.disabled = false;
     statusMsg.textContent = 'Tap to retry';
   }
-});
+}
 
 function startAnimation() {
   function tick() {
@@ -58,6 +83,25 @@ function startAnimation() {
     animFrameId = requestAnimationFrame(tick);
   }
   tick();
+}
+
+function showRetry(msg) {
+  errorMsg.textContent = msg;
+  errorMsg.classList.remove('hidden');
+  retryBtn.classList.remove('hidden');
+  startBtn.disabled = false;
+  statusMsg.textContent = '';
+}
+
+function showPermissionHelp() {
+  errorMsg.innerHTML =
+    'Permission still denied. ' +
+    'On iPhone: <b>Settings > Safari > Clear History & Website Data</b>, ' +
+    'then refresh.';
+  errorMsg.classList.remove('hidden');
+  retryBtn.classList.add('hidden');
+  startBtn.disabled = false;
+  statusMsg.textContent = 'Tap start to try again';
 }
 
 function showError(msg) {

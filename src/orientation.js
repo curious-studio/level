@@ -35,8 +35,6 @@ function handleOrientation(event) {
 }
 
 export async function initOrientation(onData) {
-  listeners.push(onData);
-
   if (typeof DeviceOrientationEvent === 'undefined') {
     throw new Error('Device orientation not supported');
   }
@@ -44,9 +42,10 @@ export async function initOrientation(onData) {
   if (typeof DeviceOrientationEvent.requestPermission === 'function') {
     const result = await DeviceOrientationEvent.requestPermission();
     if (result !== 'granted') {
-      throw new Error('Device orientation permission denied');
+      throw new Error('Orientation permission denied');
     }
   }
 
+  listeners.push(onData);
   window.addEventListener('deviceorientation', handleOrientation);
 }

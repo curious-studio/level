@@ -50,12 +50,6 @@ export class Overlay {
     return RED;
   }
 
-  _gaugeColor(deg) {
-    if (deg < 5) return GREEN;
-    if (deg < 15) return YELLOW;
-    return RED;
-  }
-
   _draw() {
     if (this.mode === 'bubble') {
       this._drawBubble();
@@ -65,75 +59,82 @@ export class Overlay {
   }
 
   _drawAngle() {
-    const { ctx, _w: w, _h: h, rawBeta, rawGamma } = this;
+    const { ctx, _w: w, _h: h, rawBeta } = this;
     ctx.clearRect(0, 0, w, h);
 
     const betaAbs = Math.abs(rawBeta);
-    const pitchDev = Math.abs(90 - betaAbs);
-    const gammaAbs = Math.abs(rawGamma);
-    const totalRad = Math.sqrt(
-      Math.pow((90 - betaAbs) * Math.PI / 180, 2) +
-      Math.pow(gammaAbs * Math.PI / 180, 2)
-    );
-    const fromVertical = Math.min(90, totalRad * 180 / Math.PI);
+    const deviation = 90 - betaAbs;
+    const fromVertical = Math.min(90, Math.max(0, Math.abs(deviation)));
 
-    const color = this._gaugeColor(fromVertical);
-    const cx = w / 2;
-    const fontSize = Math.round(Math.min(w, h) * 0.12);
-    const labelSize = Math.round(fontSize * 0.3);
-    const infoSize = Math.round(fontSize * 0.22);
+    const pivotX = w / 2;
+    const pivotY = h * 0.1;
+    const lineLen = Math.min(w, h) * 0.58;
+    const bottomY = pivotY + lineLen;
 
-    const gaugeR = Math.min(w, h) * 0.3;
-    const gaugeY = h * 0.38;
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.lineWidth = 6;
-    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(cx, gaugeY, gaugeR, Math.PI * 0.75, Math.PI * 2.25);
+    ctx.moveTo(pivotX, pivotY);
+    ctx.lineTo(pivotX, bottomY);
     ctx.stroke();
 
-    const angleRad = (fromVertical / 90) * Math.PI * 1.5 + Math.PI * 0.75;
-    const endAngle = Math.min(angleRad, Math.PI * 2.25);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 6;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.arc(cx, gaugeY, gaugeR, Math.PI * 0.75, endAngle);
-    ctx.stroke();
+    const swingRad = (fromVertical * Math.sign(deviation)) * Math.PI / 180;
+    const endX = pivotX + Math.sin(swingRad) * lineLen;
+    const endY = pivotY + Math.cos(swingRad) * lineLen;
 
-    const ndX = cx + Math.cos(endAngle) * gaugeR;
-    const ndY = gaugeY + Math.sin(endAngle) * gaugeR;
-    ctx.fillStyle = color;
+    ctx.strokeStyle = WHITE;
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(ndX, ndY, 5, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.moveTo(pivotX, pivotY);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
 
     ctx.fillStyle = WHITE;
-    ctx.font = `300 ${fontSize}px SFMono-Regular, ui-monospace, monospace`;
+    ctx.beginPath();
+    ctx.arc(pivotX, pivotY, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (fromVertical > 0.5) {
+      const arcR = Math.min(w, h) * 0.12;
+      const refAngle = Math.PI / 2;
+      const measAngle = Math.PI / 2 + swingRad;
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (swingRad >= 0) {
+        ctx.arc(pivotX, pivotY, arcR, refAngle, measAngle);
+      } else {
+        ctx.arc(pivotX, pivotY, arcR, measAngle, refAngle);
+      }
+      ctx.stroke();
+
+      const midAngle = (refAngle + measAngle) / 2;
+      const labelR = arcR + Math.round(Math.min(w, h) * 0.07);
+      const labelX = pivotX + Math.cos(midAngle) * labelR;
+      const labelY = pivotY + Math.sin(midAngle) * labelR;
+
+      const fontSize = Math.round(Math.min(w, h) * 0.1);
+      ctx.fillStyle = WHITE;
+      ctx.font = `700 ${fontSize}px SFMono-Regular, ui-monospace, monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${fromVertical.toFixed(1)}°`, labelX, labelY);
+    } else {
+      const fontSize = Math.round(Math.min(w, h) * 0.06);
+      ctx.fillStyle = GREEN;
+      ctx.font = `700 ${fontSize}px SFMono-Regular, ui-monospace, monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText('0.0°', pivotX, pivotY + 10);
+    }
+
+    const infoSize = Math.round(Math.min(w, h) * 0.035);
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.font = `${infoSize}px -apple-system, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(`${fromVertical.toFixed(1)}°`, cx, h * 0.52);
-
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.font = `${labelSize}px -apple-system, sans-serif`;
-    ctx.textBaseline = 'top';
-    ctx.fillText('from vertical', cx, h * 0.52 + fontSize * 0.5);
-
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.font = `${infoSize}px SFMono-Regular, ui-monospace, monospace`;
     ctx.textBaseline = 'bottom';
-    const signG = rawGamma >= 0 ? '+' : '';
-    const signB = rawBeta >= 90 ? '' : '-';
-    ctx.fillText(
-      `pitch ${signB}${Math.abs(90 - betaAbs).toFixed(1)}°  roll ${signG}${gammaAbs.toFixed(1)}°`,
-      cx, h - 40
-    );
-
-    ctx.fillStyle = 'rgba(255,255,255,0.2)';
-    ctx.font = `${Math.round(infoSize * 0.7)}px -apple-system, sans-serif`;
-    ctx.textBaseline = 'bottom';
-    ctx.fillText('press edge against surface to measure', cx, h - 12);
+    ctx.fillText('from vertical', pivotX, h - 36);
 
     this._drawModeLabel('angle');
   }
@@ -219,11 +220,11 @@ export class Overlay {
   _drawModeLabel(mode) {
     const { ctx, _w: w, _h: h } = this;
     const label = mode === 'angle' ? 'angle' : 'bubble';
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
-    const fs = Math.round(Math.min(w, h) * 0.035);
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    const fs = Math.round(Math.min(w, h) * 0.03);
     ctx.font = `${fs}px -apple-system, sans-serif`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
-    ctx.fillText(`◉ ${label}`, 14, 14);
+    ctx.fillText(`\u25C9 ${label}`, 12, 12);
   }
 }

@@ -62,14 +62,13 @@ export class Overlay {
   }
 
   _drawAngle() {
-    const { ctx, _w: w, _h: h, rawBeta } = this;
+    const { ctx, _w: w, _h: h, rawGamma } = this;
     ctx.clearRect(0, 0, w, h);
 
-    const b = Math.abs(rawBeta);
-    const raw = Math.min(90, Math.abs(90 - b));
+    const raw = Math.min(90, Math.abs(rawGamma));
     this._smoothDisplay += DISPLAY_SMOOTHING * (raw - this._smoothDisplay);
     const angle = this._smoothDisplay;
-    const dir = Math.sign(90 - b);
+    const dir = Math.sign(rawGamma);
 
     const pivotX = w / 2;
     const pivotY = h * 0.08;

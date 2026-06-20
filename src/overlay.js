@@ -2,6 +2,7 @@ const GREEN = '#4ade80';
 const YELLOW = '#fbbf24';
 const RED = '#ef4444';
 const WHITE = 'rgba(255,255,255,0.9)';
+const VERSION = 'v1.02';
 
 const DISPLAY_SMOOTHING = 0.15;
 
@@ -128,6 +129,7 @@ export class Overlay {
     ctx.fillText('from vertical', pivotX, bottomY + fontSize * 0.75);
 
     this._drawModeLabel('angle');
+    this._drawVersion();
   }
 
   _drawBubble() {
@@ -206,6 +208,7 @@ export class Overlay {
     ctx.fillText('Hold against a surface to measure', cx, h - 16);
 
     this._drawModeLabel('bubble');
+    this._drawVersion();
   }
 
   _drawModeLabel(mode) {
@@ -217,5 +220,15 @@ export class Overlay {
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
     ctx.fillText(`\u25C9 ${label}`, 12, 12);
+  }
+
+  _drawVersion() {
+    const { ctx } = this;
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    const fs = Math.round(Math.min(this._w, this._h) * 0.025);
+    ctx.font = `${fs}px SFMono-Regular, ui-monospace, monospace`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(VERSION, 10, this._h - 10);
   }
 }

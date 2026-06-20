@@ -66,6 +66,7 @@ async function startCamera() {
     startOverlay.classList.add('hidden');
     modeBtn.classList.remove('hidden');
     startAnimation();
+    lockOrientation();
     enterFullScreen();
   } catch (err) {
     showError(err.message || 'Camera failed');
@@ -80,6 +81,12 @@ function startAnimation() {
     animFrameId = requestAnimationFrame(tick);
   }
   tick();
+}
+
+function lockOrientation() {
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('portrait').catch(() => {});
+  }
 }
 
 function enterFullScreen() {

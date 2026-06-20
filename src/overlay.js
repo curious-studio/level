@@ -2,7 +2,7 @@ const GREEN = '#4ade80';
 const YELLOW = '#fbbf24';
 const RED = '#ef4444';
 const WHITE = 'rgba(255,255,255,0.9)';
-const VERSION = 'v1.03';
+const VERSION = 'v1.04';
 
 export class Overlay {
   constructor(canvas) {
@@ -222,26 +222,59 @@ export class Overlay {
   _drawDebugInfo() {
     const { ctx, _w: w, _h: h, rawAlpha, rawBeta, rawGamma } = this;
     const fs = Math.round(Math.min(w, h) * 0.028);
-    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    const gap = 4;
+    const pad = 6;
     ctx.font = `${fs}px SFMono-Regular, ui-monospace, monospace`;
     ctx.textAlign = 'right';
     ctx.textBaseline = 'bottom';
-    const x = w - 10;
-    let y = h - 10;
-    ctx.fillText(`α: ${rawAlpha != null ? rawAlpha.toFixed(1) : '--'}°`, x, y);
-    y -= fs + 4;
-    ctx.fillText(`β: ${rawBeta.toFixed(1)}°`, x, y);
-    y -= fs + 4;
-    ctx.fillText(`γ: ${rawGamma.toFixed(1)}°`, x, y);
+
+    const lines = [
+      `α: ${rawAlpha != null ? rawAlpha.toFixed(1) : '--'}°`,
+      `β: ${rawBeta.toFixed(1)}°`,
+      `γ: ${rawGamma.toFixed(1)}°`,
+    ];
+
+    const lineH = fs + gap;
+    const boxH = lines.length * lineH + pad * 2;
+    let maxW = 0;
+    for (const l of lines) {
+      const m = ctx.measureText(l);
+      if (m.width > maxW) maxW = m.width;
+    }
+    const boxW = maxW + pad * 2;
+
+    const bx = w - 10 - boxW;
+    const by = h - 10 - boxH;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    ctx.fillRect(bx, by, boxW, boxH);
+
+    ctx.fillStyle = '#fff';
+    let ty = h - 10 - pad;
+    for (let i = lines.length - 1; i >= 0; i--) {
+      ctx.fillText(lines[i], w - 10, ty);
+      ty -= lineH;
+    }
   }
 
   _drawVersion() {
-    const { ctx } = this;
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
-    const fs = Math.round(Math.min(this._w, this._h) * 0.022);
+    const { ctx, _w: w, _h: h } = this;
+    const fs = Math.round(Math.min(w, h) * 0.022);
+    const pad = 6;
     ctx.font = `${fs}px SFMono-Regular, ui-monospace, monospace`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(VERSION, 10, this._h - 10);
+
+    const m = ctx.measureText(VERSION);
+    const boxW = m.width + pad * 2;
+    const boxH = fs + pad * 2;
+    const bx = 10;
+    const by = h - 10 - boxH;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    ctx.fillRect(bx, by, boxW, boxH);
+
+    ctx.fillStyle = '#fff';
+    ctx.fillText(VERSION, bx + pad, by + boxH - pad);
   }
 }

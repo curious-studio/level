@@ -17,17 +17,17 @@ let stream = null;
 
 startBtn.addEventListener('click', async () => {
   startBtn.disabled = true;
-  statusMsg.textContent = 'Requesting camera...';
 
   try {
-    stream = await initCamera();
-    video.srcObject = stream;
-    await video.play();
-
     statusMsg.textContent = 'Requesting sensors...';
     await initOrientation((data) => {
       latestData = data;
     });
+
+    statusMsg.textContent = 'Requesting camera...';
+    stream = await initCamera();
+    video.srcObject = stream;
+    await video.play();
 
     startOverlay.classList.add('hidden');
     startAnimation();

@@ -59,16 +59,15 @@ export class Overlay {
   }
 
   _drawAngle() {
-    const { ctx, _w: w, _h: h, rawBeta } = this;
+    const { ctx, _w: w, _h: h, rawGamma } = this;
     ctx.clearRect(0, 0, w, h);
 
-    const betaAbs = Math.abs(rawBeta);
-    const deviation = 90 - betaAbs;
-    const fromVertical = Math.min(90, Math.max(0, Math.abs(deviation)));
+    const roll = Math.min(90, Math.abs(rawGamma));
+    const dir = Math.sign(rawGamma);
 
     const pivotX = w / 2;
-    const pivotY = h * 0.1;
-    const lineLen = Math.min(w, h) * 0.58;
+    const pivotY = h * 0.08;
+    const lineLen = Math.min(w, h) * 0.62;
     const bottomY = pivotY + lineLen;
 
     ctx.strokeStyle = 'rgba(255,255,255,0.5)';
@@ -78,7 +77,7 @@ export class Overlay {
     ctx.lineTo(pivotX, bottomY);
     ctx.stroke();
 
-    const swingRad = (fromVertical * Math.sign(deviation)) * Math.PI / 180;
+    const swingRad = (roll * dir) * Math.PI / 180;
     const endX = pivotX + Math.sin(swingRad) * lineLen;
     const endY = pivotY + Math.cos(swingRad) * lineLen;
 
@@ -94,8 +93,8 @@ export class Overlay {
     ctx.arc(pivotX, pivotY, 3, 0, Math.PI * 2);
     ctx.fill();
 
-    if (fromVertical > 0.5) {
-      const arcR = Math.min(w, h) * 0.12;
+    if (roll > 0.5) {
+      const arcR = Math.min(w, h) * 0.1;
       const refAngle = Math.PI / 2;
       const measAngle = Math.PI / 2 + swingRad;
 
@@ -108,33 +107,20 @@ export class Overlay {
         ctx.arc(pivotX, pivotY, arcR, measAngle, refAngle);
       }
       ctx.stroke();
-
-      const midAngle = (refAngle + measAngle) / 2;
-      const labelR = arcR + Math.round(Math.min(w, h) * 0.07);
-      const labelX = pivotX + Math.cos(midAngle) * labelR;
-      const labelY = pivotY + Math.sin(midAngle) * labelR;
-
-      const fontSize = Math.round(Math.min(w, h) * 0.1);
-      ctx.fillStyle = WHITE;
-      ctx.font = `700 ${fontSize}px SFMono-Regular, ui-monospace, monospace`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(`${fromVertical.toFixed(1)}°`, labelX, labelY);
-    } else {
-      const fontSize = Math.round(Math.min(w, h) * 0.06);
-      ctx.fillStyle = GREEN;
-      ctx.font = `700 ${fontSize}px SFMono-Regular, ui-monospace, monospace`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      ctx.fillText('0.0°', pivotX, pivotY + 10);
     }
 
-    const infoSize = Math.round(Math.min(w, h) * 0.035);
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
-    ctx.font = `${infoSize}px -apple-system, sans-serif`;
+    const fontSize = Math.round(Math.min(w, h) * 0.14);
+    ctx.fillStyle = roll > 5 ? WHITE : GREEN;
+    ctx.font = `800 ${fontSize}px SFMono-Regular, ui-monospace, monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
-    ctx.fillText('from vertical', pivotX, h - 36);
+    ctx.fillText(`${roll.toFixed(1)}°`, pivotX, bottomY + fontSize * 1.1);
+
+    const labelSize = Math.round(fontSize * 0.25);
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = `${labelSize}px -apple-system, sans-serif`;
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('roll', pivotX, bottomY + fontSize * 0.75);
 
     this._drawModeLabel('angle');
   }

@@ -2,7 +2,7 @@ const GREEN = '#4ade80';
 const YELLOW = '#fbbf24';
 const RED = '#ef4444';
 const WHITE = 'rgba(255,255,255,0.9)';
-const VERSION = 'v1.05';
+const VERSION = 'v1.06';
 
 export class Overlay {
   constructor(canvas) {
@@ -68,8 +68,13 @@ export class Overlay {
     ctx.clearRect(0, 0, w, h);
 
     const b = Math.abs(rawBeta);
-    const angle = Math.min(90, Math.abs(90 - b));
-    const dir = Math.sign(90 - b);
+    const g = Math.abs(rawGamma);
+    const betaDev = (90 - b) * Math.PI / 180;
+    const gammaRad = g * Math.PI / 180;
+    const prod = Math.cos(betaDev) * Math.cos(gammaRad);
+    const totalRad = Math.acos(Math.max(-1, Math.min(1, prod)));
+    const angle = Math.min(90, totalRad * 180 / Math.PI);
+    const dir = rawBeta < 90 ? 1 : -1;
 
     const pivotX = w / 2;
     const pivotY = h * 0.08;

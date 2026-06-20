@@ -62,13 +62,14 @@ export class Overlay {
   }
 
   _drawAngle() {
-    const { ctx, _w: w, _h: h, rawGamma } = this;
+    const { ctx, _w: w, _h: h, rawBeta } = this;
     ctx.clearRect(0, 0, w, h);
 
-    const raw = Math.min(90, Math.abs(rawGamma));
+    const b = Math.abs(rawBeta);
+    const raw = Math.min(90, Math.abs(90 - b));
     this._smoothDisplay += DISPLAY_SMOOTHING * (raw - this._smoothDisplay);
-    const roll = this._smoothDisplay;
-    const dir = Math.sign(rawGamma);
+    const angle = this._smoothDisplay;
+    const dir = Math.sign(90 - b);
 
     const pivotX = w / 2;
     const pivotY = h * 0.08;
@@ -82,7 +83,7 @@ export class Overlay {
     ctx.lineTo(pivotX, bottomY);
     ctx.stroke();
 
-    const swingRad = (roll * dir) * Math.PI / 180;
+    const swingRad = (angle * dir) * Math.PI / 180;
     const endX = pivotX + Math.sin(swingRad) * lineLen;
     const endY = pivotY + Math.cos(swingRad) * lineLen;
 
@@ -98,7 +99,7 @@ export class Overlay {
     ctx.arc(pivotX, pivotY, 3, 0, Math.PI * 2);
     ctx.fill();
 
-    if (roll > 0.5) {
+    if (angle > 0.5) {
       const arcR = Math.min(w, h) * 0.1;
       const refAngle = Math.PI / 2;
       const measAngle = Math.PI / 2 + swingRad;
@@ -115,17 +116,17 @@ export class Overlay {
     }
 
     const fontSize = Math.round(Math.min(w, h) * 0.14);
-    ctx.fillStyle = roll > 5 ? WHITE : GREEN;
+    ctx.fillStyle = angle > 5 ? WHITE : GREEN;
     ctx.font = `800 ${fontSize}px SFMono-Regular, ui-monospace, monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(`${roll.toFixed(1)}°`, pivotX, bottomY + fontSize * 1.1);
+    ctx.fillText(`${angle.toFixed(1)}°`, pivotX, bottomY + fontSize * 1.1);
 
     const labelSize = Math.round(fontSize * 0.25);
     ctx.fillStyle = 'rgba(255,255,255,0.35)';
     ctx.font = `${labelSize}px -apple-system, sans-serif`;
     ctx.textBaseline = 'bottom';
-    ctx.fillText('roll', pivotX, bottomY + fontSize * 0.75);
+    ctx.fillText('from vertical', pivotX, bottomY + fontSize * 0.75);
 
     this._drawModeLabel('angle');
   }

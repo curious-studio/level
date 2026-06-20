@@ -95,9 +95,9 @@ function showRetry(msg) {
 
 function showPermissionHelp() {
   errorMsg.innerHTML =
-    'Permission still denied. ' +
-    'On iPhone: <b>Settings > Safari > Clear History & Website Data</b>, ' +
-    'then refresh.';
+    'Permission still denied on this device.<br><br>' +
+    '<b>Safari:</b> Settings > Safari > Clear History & Website Data<br>' +
+    '<b>Brave:</b> Quit & relaunch the app, then tap Start again';
   errorMsg.classList.remove('hidden');
   retryBtn.classList.add('hidden');
   startBtn.disabled = false;

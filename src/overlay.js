@@ -2,9 +2,7 @@ const GREEN = '#4ade80';
 const YELLOW = '#fbbf24';
 const RED = '#ef4444';
 const WHITE = 'rgba(255,255,255,0.9)';
-const VERSION = 'v1.02';
-
-const DISPLAY_SMOOTHING = 0.15;
+const VERSION = 'v1.03';
 
 export class Overlay {
   constructor(canvas) {
@@ -12,10 +10,10 @@ export class Overlay {
     this.ctx = canvas.getContext('2d');
     this.pitch = 0;
     this.roll = 0;
+    this.rawAlpha = 0;
     this.rawBeta = 90;
     this.rawGamma = 0;
     this.mode = 'angle';
-    this._smoothDisplay = 0;
     this._resize();
     window.addEventListener('resize', () => this._resize());
   }
@@ -29,7 +27,7 @@ export class Overlay {
     this.canvas.height = h * dpr;
     this.canvas.style.width = w + 'px';
     this.canvas.style.height = h + 'px';
-    this.ctx.scale(dpr, dpr);
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this._w = w;
     this._h = h;
   }
@@ -37,6 +35,7 @@ export class Overlay {
   update(data) {
     this.pitch = data.pitch;
     this.roll = data.roll;
+    this.rawAlpha = data.rawAlpha;
     this.rawBeta = data.rawBeta;
     this.rawGamma = data.rawGamma;
     this._draw();
@@ -60,15 +59,15 @@ export class Overlay {
     } else {
       this._drawAngle();
     }
+    this._drawDebugInfo();
+    this._drawVersion();
   }
 
   _drawAngle() {
-    const { ctx, _w: w, _h: h, rawGamma } = this;
+    const { ctx, _w: w, _h: h, rawGamma, rawBeta, rawAlpha } = this;
     ctx.clearRect(0, 0, w, h);
 
-    const raw = Math.min(90, Math.abs(rawGamma));
-    this._smoothDisplay += DISPLAY_SMOOTHING * (raw - this._smoothDisplay);
-    const angle = this._smoothDisplay;
+    const angle = Math.min(90, Math.abs(rawGamma));
     const dir = Math.sign(rawGamma);
 
     const pivotX = w / 2;
@@ -129,7 +128,6 @@ export class Overlay {
     ctx.fillText('from vertical', pivotX, bottomY + fontSize * 0.75);
 
     this._drawModeLabel('angle');
-    this._drawVersion();
   }
 
   _drawBubble() {
@@ -208,7 +206,6 @@ export class Overlay {
     ctx.fillText('Hold against a surface to measure', cx, h - 16);
 
     this._drawModeLabel('bubble');
-    this._drawVersion();
   }
 
   _drawModeLabel(mode) {
@@ -222,10 +219,26 @@ export class Overlay {
     ctx.fillText(`\u25C9 ${label}`, 12, 12);
   }
 
+  _drawDebugInfo() {
+    const { ctx, _w: w, _h: h, rawAlpha, rawBeta, rawGamma } = this;
+    const fs = Math.round(Math.min(w, h) * 0.028);
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.font = `${fs}px SFMono-Regular, ui-monospace, monospace`;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    const x = w - 10;
+    let y = h - 10;
+    ctx.fillText(`α: ${rawAlpha != null ? rawAlpha.toFixed(1) : '--'}°`, x, y);
+    y -= fs + 4;
+    ctx.fillText(`β: ${rawBeta.toFixed(1)}°`, x, y);
+    y -= fs + 4;
+    ctx.fillText(`γ: ${rawGamma.toFixed(1)}°`, x, y);
+  }
+
   _drawVersion() {
     const { ctx } = this;
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
-    const fs = Math.round(Math.min(this._w, this._h) * 0.025);
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    const fs = Math.round(Math.min(this._w, this._h) * 0.022);
     ctx.font = `${fs}px SFMono-Regular, ui-monospace, monospace`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'bottom';

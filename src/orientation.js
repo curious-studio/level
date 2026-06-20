@@ -7,6 +7,7 @@ let smoothRawGamma = 0;
 const listeners = [];
 
 function handleOrientation(event) {
+  const alpha = event.alpha;
   const beta = event.beta;
   const gamma = event.gamma;
 
@@ -28,6 +29,7 @@ function handleOrientation(event) {
   const data = {
     pitch: smoothPitch,
     roll: smoothRoll,
+    rawAlpha: alpha,
     rawBeta: smoothRawBeta,
     rawGamma: smoothRawGamma,
   };

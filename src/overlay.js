@@ -2,7 +2,7 @@ const GREEN = '#4ade80';
 const YELLOW = '#fbbf24';
 const RED = '#ef4444';
 const WHITE = 'rgba(255,255,255,0.9)';
-const VERSION = 'v1.06';
+const VERSION = 'v1.07';
 
 export class Overlay {
   constructor(canvas) {
@@ -227,17 +227,29 @@ export class Overlay {
 
   _drawDebugInfo() {
     const { ctx, _w: w, _h: h, rawAlpha, rawBeta, rawGamma } = this;
-    const fs = Math.round(Math.min(w, h) * 0.028);
-    const gap = 4;
+    const fs = Math.round(Math.min(w, h) * 0.026);
+    const gap = 3;
     const pad = 6;
     ctx.font = `${fs}px SFMono-Regular, ui-monospace, monospace`;
     ctx.textAlign = 'right';
     ctx.textBaseline = 'bottom';
 
+    const b = Math.abs(rawBeta);
+    const g = Math.abs(rawGamma);
+    const aVal = Math.min(90, Math.abs(90 - b));
+    const betaDev = (90 - b) * Math.PI / 180;
+    const gammaRad = g * Math.PI / 180;
+    const prod = Math.cos(betaDev) * Math.cos(gammaRad);
+    const bVal = Math.min(90, Math.acos(Math.max(-1, Math.min(1, prod))) * 180 / Math.PI);
+    const cVal = g;
+
     const lines = [
       `α: ${rawAlpha != null ? rawAlpha.toFixed(1) : '--'}°`,
       `β: ${rawBeta.toFixed(1)}°`,
       `γ: ${rawGamma.toFixed(1)}°`,
+      `a: ${aVal.toFixed(1)}°`,
+      `b: ${bVal.toFixed(1)}°`,
+      `c: ${cVal.toFixed(1)}°`,
     ];
 
     const lineH = fs + gap;
